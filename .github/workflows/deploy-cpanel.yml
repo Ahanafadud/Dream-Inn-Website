@@ -1,0 +1,80 @@
+# Deploy Dream Inn to cPanel via FTP on every push to main.
+#
+# GitHub → Settings → Secrets and variables → Actions — add:
+#   FTP_SERVER       e.g. ftp.yourdomain.com  (or your host IP)
+#   FTP_USERNAME     cPanel FTP username
+#   FTP_PASSWORD     cPanel FTP password
+#   FTP_SERVER_DIR   remote folder, e.g. /public_html/  or /home/USER/dreaminn/
+# Optional:
+#   FTP_PROTOCOL     ftp | ftps | ftps-legacy  (default: ftp)
+#   FTP_PORT         e.g. 21
+#
+# After the first successful upload, in cPanel:
+#   1. Create MySQL DB + user; import/push schema (npm run db:push over SSH/Terminal)
+#   2. Software → Setup Node.js App → Application root = FTP_SERVER_DIR folder
+#   3. Startup file: app.js | Node 20+ | add env vars (DB_*, SESSION_SECRET, ADMIN_*)
+#   4. Run NPM Install (or: npm ci --omit=dev), then Restart
+
+name: Deploy to cPanel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cpanel-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build & FTP upload
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Node (cPanel)
+        run: npm run build
+        env:
+          NITRO_PRESET: node-server
+
+      - name: Prepare upload folder
+        run: |
+          mkdir -p cpanel-dist
+          cp -r .output cpanel-dist/
+          cp app.js package.json package-lock.json cpanel-dist/
+          # Seeded / CMS media (runtime writes still go to public/uploads on the server)
+          if [ -d public/uploads ]; then
+            mkdir -p cpanel-dist/public
+            cp -r public/uploads cpanel-dist/public/
+          fi
+          # Keep a copy of example env for reference on the server (never real .env)
+          cp .env.example cpanel-dist/.env.example
+
+      - name: Upload to cPanel (FTP)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ secrets.FTP_PROTOCOL || 'ftp' }}
+          port: ${{ secrets.FTP_PORT || 21 }}
+          local-dir: ./cpanel-dist/
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.env
+            **/.env.local

@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // cPanel / VPS Node hosting (override with NITRO_PRESET if needed)
+  nitro: {
+    preset: "node-server",
+  },
 });
