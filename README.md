@@ -82,7 +82,7 @@ npm run db:seed       # re-seed settings, sections, rooms, admin, media
    - If `output/` is missing, wait for a newer successful build and download again.
 2. Upload/extract that folder in cPanel File Manager.
 3. Create a MySQL database + user; copy `env.example.txt` → `.env` and fill in values (or set env vars in Node.js App).
-4. **Setup Node.js App** — application root = extracted folder, startup file `app.js`, Node **22+** — then Restart.
+4. **Setup Node.js App** — application root = extracted folder, startup file **`app.cjs`** (not `app.js`), Node **22+** if available — then Restart.
    - Optional: run `npm ci` again inside cPanel Terminal if modules fail to load.
 
 No FTP secrets are required.

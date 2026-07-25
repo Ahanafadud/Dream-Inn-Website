@@ -1,6 +1,6 @@
 /**
- * cPanel "Setup Node.js App" startup file.
- * Points Passenger / the Node selector at the Nitro production server.
+ * ESM entry (local / non-Passenger).
+ * On cPanel Phusion Passenger, use app.cjs instead — Passenger require() cannot load ESM.
  */
 import { pathToFileURL } from "node:url";
 import { existsSync } from "node:fs";

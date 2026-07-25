@@ -43,8 +43,8 @@ jobs:
           # Source & assets
           cp -r src scripts public cpanel-dist/
 
-          # App entry + manifests
-          cp app.js package.json package-lock.json cpanel-dist/
+          # App entry + manifests (app.cjs = Passenger-compatible CommonJS startup)
+          cp app.js app.cjs package.json package-lock.json cpanel-dist/
 
           # Build / tooling config needed on the server
           cp vite.config.ts tsconfig.json drizzle.config.ts components.json cpanel-dist/
