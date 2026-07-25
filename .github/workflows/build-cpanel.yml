@@ -1,0 +1,55 @@
+# Build a cPanel-ready zip on push / manual run.
+# Download it from the Actions run → Artifacts → cpanel-dist
+# Then upload/extract on cPanel (no FTP secrets needed).
+
+name: Build for cPanel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cpanel-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build download package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Node (cPanel)
+        run: npm run build
+        env:
+          NITRO_PRESET: node-server
+
+      - name: Prepare package folder
+        run: |
+          mkdir -p cpanel-dist
+          cp -r .output cpanel-dist/
+          cp app.js package.json package-lock.json cpanel-dist/
+          if [ -d public/uploads ]; then
+            mkdir -p cpanel-dist/public
+            cp -r public/uploads cpanel-dist/public/
+          fi
+          cp .env.example cpanel-dist/.env.example
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpanel-dist
+          path: cpanel-dist/
+          retention-days: 14

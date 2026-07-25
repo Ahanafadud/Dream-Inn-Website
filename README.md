@@ -75,19 +75,12 @@ npm run db:push       # push schema to MySQL
 npm run db:seed       # re-seed settings, sections, rooms, admin, media
 ```
 
-## Deploy to cPanel (GitHub Actions)
+## Deploy to cPanel (manual)
 
-Workflow: `.github/workflows/deploy-cpanel.yml` — builds on push to `main` and uploads via FTP.
+1. On GitHub: **Actions → Build for cPanel →** open the latest run → download artifact **`cpanel-dist`**.
+   - Or build locally: `npm ci && npm run build`, then zip `.output`, `app.js`, `package.json`, `package-lock.json`, and `public/uploads`.
+2. Upload/extract that folder in cPanel File Manager.
+3. Create a MySQL database + user; set env vars from `.env.example`.
+4. **Setup Node.js App** — startup file `app.js`, Node **22+** — then Restart.
 
-Add these repository secrets (Settings → Secrets → Actions):
-
-| Secret | Example |
-|--------|---------|
-| `FTP_SERVER` | `ftp.yourdomain.com` |
-| `FTP_USERNAME` | your cPanel FTP user |
-| `FTP_PASSWORD` | FTP password |
-| `FTP_SERVER_DIR` | `/home/USER/dreaminn/` or `/public_html/` |
-
-Optional: `FTP_PROTOCOL` (`ftp` / `ftps`), `FTP_PORT` (default `21`).
-
-Then in cPanel: create MySQL DB, **Setup Node.js App** (startup file `app.js`, Node 20+), set env vars from `.env.example`, run NPM Install if prompted, Restart.
+No FTP secrets are required.
