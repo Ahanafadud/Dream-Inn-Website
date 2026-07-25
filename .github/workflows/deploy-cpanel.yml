@@ -12,7 +12,7 @@
 # After the first successful upload, in cPanel:
 #   1. Create MySQL DB + user; import/push schema (npm run db:push over SSH/Terminal)
 #   2. Software → Setup Node.js App → Application root = FTP_SERVER_DIR folder
-#   3. Startup file: app.js | Node 20+ | add env vars (DB_*, SESSION_SECRET, ADMIN_*)
+#   3. Startup file: app.js | Node 22+ | add env vars (DB_*, SESSION_SECRET, ADMIN_*)
 #   4. Run NPM Install (or: npm ci --omit=dev), then Restart
 
 name: Deploy to cPanel
@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
 
       - name: Install dependencies
