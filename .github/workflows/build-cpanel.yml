@@ -1,6 +1,5 @@
-# Build a cPanel-ready zip on push / manual run.
-# Download it from the Actions run → Artifacts → cpanel-dist
-# Then upload/extract on cPanel (no FTP secrets needed).
+# Build a full cPanel-ready zip (source + output + node_modules).
+# Download from Actions → Artifacts → cpanel-dist → upload/extract on cPanel.
 
 name: Build for cPanel
 
@@ -36,22 +35,39 @@ jobs:
         env:
           NITRO_PRESET: node-server
 
-      - name: Prepare package folder
+      - name: Prepare full package folder
         run: |
+          set -e
           mkdir -p cpanel-dist
-          # Use "output" (not ".output") so Windows/cPanel File Manager show the folder
-          # and GitHub Actions does not drop hidden paths from the artifact.
-          cp -r .output cpanel-dist/output
+
+          # Source & assets
+          cp -r src scripts public cpanel-dist/
+
+          # App entry + manifests
           cp app.js package.json package-lock.json cpanel-dist/
-          if [ -d public/uploads ]; then
-            mkdir -p cpanel-dist/public
-            cp -r public/uploads cpanel-dist/public/
-          fi
+
+          # Build / tooling config needed on the server
+          cp vite.config.ts tsconfig.json drizzle.config.ts components.json cpanel-dist/
+          cp eslint.config.js .prettierrc .prettierignore .gitignore cpanel-dist/ || true
+          cp README.md cpanel-dist/ || true
           cp .env.example cpanel-dist/env.example.txt
-          # Sanity check — fail the job if the server bundle is missing
+
+          # Built Nitro server (visible name — not ".output")
+          cp -r .output cpanel-dist/output
+
+          # Dependencies (Linux) so cPanel can run without reinstalling first
+          cp -r node_modules cpanel-dist/
+
+          # Fail if critical pieces are missing
           test -f cpanel-dist/output/server/index.mjs
-          echo "Package contents:"
-          find cpanel-dist -maxdepth 3 -type d | head -50
+          test -d cpanel-dist/src
+          test -d cpanel-dist/scripts
+          test -d cpanel-dist/node_modules
+
+          echo "=== Package top-level ==="
+          ls -la cpanel-dist
+          echo "=== Approximate size ==="
+          du -sh cpanel-dist cpanel-dist/output cpanel-dist/node_modules cpanel-dist/src
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -60,3 +76,4 @@ jobs:
           path: cpanel-dist/
           include-hidden-files: true
           retention-days: 14
+          compression-level: 9

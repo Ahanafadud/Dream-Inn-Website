@@ -78,10 +78,11 @@ npm run db:seed       # re-seed settings, sections, rooms, admin, media
 ## Deploy to cPanel (manual)
 
 1. On GitHub: **Actions → Build for cPanel →** open the latest run → download artifact **`cpanel-dist`**.
-   - The zip must include an **`output`** folder (the built server). If you only see `app.js` + JSON files, re-download a newer build.
-   - Or build locally: `npm ci && npm run build`, then zip `output` (rename `.output` → `output`), `app.js`, `package.json`, `package-lock.json`, and `public/uploads`.
+   - The zip includes: `src/`, `scripts/`, `public/`, `output/`, `node_modules/`, `app.js`, and config/JSON files.
+   - If `output/` is missing, wait for a newer successful build and download again.
 2. Upload/extract that folder in cPanel File Manager.
-3. Create a MySQL database + user; set env vars from `env.example.txt` / `.env.example`.
-4. **Setup Node.js App** — startup file `app.js`, Node **22+** — then Restart.
+3. Create a MySQL database + user; copy `env.example.txt` → `.env` and fill in values (or set env vars in Node.js App).
+4. **Setup Node.js App** — application root = extracted folder, startup file `app.js`, Node **22+** — then Restart.
+   - Optional: run `npm ci` again inside cPanel Terminal if modules fail to load.
 
 No FTP secrets are required.
