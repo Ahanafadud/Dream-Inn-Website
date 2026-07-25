@@ -39,17 +39,24 @@ jobs:
       - name: Prepare package folder
         run: |
           mkdir -p cpanel-dist
-          cp -r .output cpanel-dist/
+          # Use "output" (not ".output") so Windows/cPanel File Manager show the folder
+          # and GitHub Actions does not drop hidden paths from the artifact.
+          cp -r .output cpanel-dist/output
           cp app.js package.json package-lock.json cpanel-dist/
           if [ -d public/uploads ]; then
             mkdir -p cpanel-dist/public
             cp -r public/uploads cpanel-dist/public/
           fi
-          cp .env.example cpanel-dist/.env.example
+          cp .env.example cpanel-dist/env.example.txt
+          # Sanity check — fail the job if the server bundle is missing
+          test -f cpanel-dist/output/server/index.mjs
+          echo "Package contents:"
+          find cpanel-dist -maxdepth 3 -type d | head -50
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: cpanel-dist
           path: cpanel-dist/
+          include-hidden-files: true
           retention-days: 14
